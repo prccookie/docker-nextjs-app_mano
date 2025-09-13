@@ -1,0 +1,41 @@
+﻿services:
+  nextjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+      # - /app/node_modules
+    ports:
+      - "3001:3000"
+      - "5555:5555"  # Prisma Studio 用
+    command: npm run dev
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis 
+  db:
+    image: postgres
+    container_name: test_db
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+  redis:
+    image: redis:7
+    container_name: redis_server
+    ports:
+      - "6379:6379"  # Redis のデフォルトポート
+    volumes:
+      - redis-data:/data
+
+volumes:
+  db-data:
+  redis-data:

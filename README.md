@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+﻿# React会員管理システム課題
 
-## Getting Started
+これはReact会員管理システム課題用ファイルのReadMeです。
 
-First, run the development server:
+# 使用方法
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 初回の使用方法
+- 課題用ファイルのフォルダトップにある docker-compose.yml を上書きしてください。
+- あらかじめDocker Desktopをインストールします。
+- Docker Desktopを起動します。
+- ターミナルを起動し、課題用ファイルのフォルダに移動します。
+- ターミナルに docker compose up -d と入力します。
+- 続けて、docker exec -it docker-nextjs-app_mano-nextjs-1 sh と入力して、Prisma を Docker コンテナ内で実行します。
+- 続けて、npx prisma migrate dev --name init と入力して、Prisma のマイグレーションをコンテナ内で実行します。
+- ✔ Generated Prisma Client と表示されたら、exit と入力して、コンテナから出ます。
+- ブラウザで http://localhost:3001/ にアクセスしてください。
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 2回目以降の使用方法
+- Docker Desktopを起動します。
+- ターミナルを起動し、課題用ファイルのフォルダに移動します。
+- ターミナルに docker compose up -d と入力します。
+- ブラウザで http://localhost:3001/ にアクセスしてください。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 終了方法
+- ブラウザまたはブラウザのタブを閉じます。
+- ターミナルを閉じるか docker compose down と入力します。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# 主な機能
 
-## Learn More
+TODOリストページ上部に設置された9つのボタンの説明です。
 
-To learn more about Next.js, take a look at the following resources:
+## 「並替」
+- ボタンを押すと並び替えモードになります。
+- 並び替えモード中はドラッグでリストを並び替えすることができます。編集はできません。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 「並替終」
+- ボタンを押すと並び替えモードを終了して、編集できるようになります。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 「追加」
+- ボタンを押すとリストの最下段に1行追加します。
 
-## Deploy on Vercel
+## 「保存」
+- ボタンを押すと現在のリストを保存します。
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 「逆順」
+- ボタンを押すとリストの順序が逆順になります
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 「☑反転」
+- ボタンを押すとリスト内のチェックの有無を全て反転します。
+
+## 「☑解除」
+- ボタンを押すとリスト内のチェックを全て外します。
+
+## 「戻す」
+- ボタンを押すとリストを最後に保存した内容に戻します。
+
+## 「☑下段」
+- ボタンを押すとリスト内のチェックが入った行を全てリストの最下段に移動します。
+
+## 「☑削除」
+- ボタンを押すとリスト内のチェックが入った行を全て消します。
