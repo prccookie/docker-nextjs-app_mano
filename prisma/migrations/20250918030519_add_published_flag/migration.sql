@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "public"."Post" ADD COLUMN     "club" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "diamond" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "heart" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "spade" BOOLEAN NOT NULL DEFAULT false;

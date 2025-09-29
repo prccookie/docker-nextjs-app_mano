@@ -1,4 +1,4 @@
-﻿# React会員管理システム課題
+# React会員管理システム課題
 
 これはReact会員管理システム課題用ファイルのReadMeです。
 
@@ -9,7 +9,8 @@
 - Docker Desktopを起動します。
 - ターミナルを起動し、課題用ファイルのフォルダに移動します。
 - ターミナルに docker compose up -d と入力します。
-- 続けて、docker exec -it docker-nextjs-app_mano-nextjs-1 sh と入力して、Prisma を Docker コンテナ内で実行します。
+- 「(フォルダ名)-nextjs-1」という名前のイメージが作られます（例：フォルダ名が「docker-nextjs-app_mano」ならイメージ名は「docker-nextjs-app_mano-nextjs-1」）。
+- 続けて、docker exec -it (イメージ名) sh と入力して、Prisma を Docker コンテナ内で実行します。
 - 続けて、npx prisma migrate dev --name init と入力して、Prisma のマイグレーションをコンテナ内で実行します。
 - ✔ Generated Prisma Client と表示されたら、exit と入力して、コンテナから出ます。
 - ブラウザで http://localhost:3001/ にアクセスしてください。
@@ -58,3 +59,17 @@ TODOリストページ上部に設置された9つのボタンの説明です。
 
 ## 「☑削除」
 - ボタンを押すとリスト内のチェックが入った行を全て消します。
+
+TODOリスト内側のボタンの説明です。
+
+## 「チェック欄」
+- チェックを入れるとテキストに取り消し線がひかれます。
+
+## 「テキスト欄」
+- テキストを入力できます。
+
+## 「ゴミ箱アイコン」
+- リストを削除します。
+
+## 「＋アイコン」
+- リストを1行挿入します。

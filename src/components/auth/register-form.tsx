@@ -76,6 +76,7 @@ export const RegisterForm = () => {
                                         <Input
                                             {...field}
                                             placeholder="ネクスト ジェイエス"
+                                            autoComplete="name"
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -93,6 +94,7 @@ export const RegisterForm = () => {
                                             {...field}
                                             placeholder="nextjs@example.com"
                                             type="email"
+                                            autoComplete="email"
                                         />
                                     </FormControl>
                                     <FormMessage />

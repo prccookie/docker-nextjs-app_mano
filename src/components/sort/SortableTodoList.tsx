@@ -19,13 +19,27 @@ import {
 import { SortableItem } from "./SortableTodoItem";
 import { User } from 'next-auth' // 型がある場合
 import { CgCheckR } from "react-icons/cg";
+import { FaPlus } from "react-icons/fa";
 
 type TodolistProps = {
     user?: User
 }
 
 export function SortableList({ user }: TodolistProps) {
-    const [posts, setPosts] = useState<{ id: string; title: string; published: boolean }[]>([])
+    type PostType = {
+        id: string;
+        title: string;
+        published: boolean;
+        club: boolean;
+        diamond: boolean;
+        heart: boolean;
+        spade: boolean;
+    };
+    const [posts, setPosts] = useState <PostType[]>([])
+    //絞り込み結果は filteredIndexes に保持し、表示は posts[index] を使う
+    const [filteredIndexes, setFilteredIndexes] = useState<number[]>([]);
+
+    type PostKey = "club" | "diamond" | "heart" | "spade";
     useEffect(() => {
         const fetchPost = async () => {
             if (!user?.id) return;
@@ -91,6 +105,14 @@ export function SortableList({ user }: TodolistProps) {
     const handleReload = async () => {
         if (!user?.id) return;
 
+        setFilterFlagsDraft({
+            club: false,
+            diamond: false,
+            heart: false,
+            spade: false,
+        });
+        hasFilteredOnce.current = false;
+
         resetTimer();
         //setLoading(true);
         try {
@@ -117,19 +139,60 @@ export function SortableList({ user }: TodolistProps) {
             id: crypto.randomUUID(), // 仮ID（保存時にDBで上書きされる）
             title: '',
             published: false,
+            club: filterFlagsDraft.club,
+            diamond: filterFlagsDraft.diamond,
+            heart: filterFlagsDraft.heart,
+            spade: filterFlagsDraft.spade,
         };
+        const newIndex = posts.length;
         setPosts([...posts, newPost]);
-        resetTimer();
-        setMessage('');
+        setFilteredIndexes((prev) => [...prev, newIndex]);
     };
+
+    //挿入ボタン
+    const handleInsertPost = (index: number) => {
+        const insPost = {
+            id: crypto.randomUUID(), // 仮ID（保存時にDBで上書きされる）
+            title: '',
+            published: false,
+            club: filterFlagsDraft.club,
+            diamond: filterFlagsDraft.diamond,
+            heart: filterFlagsDraft.heart,
+            spade: filterFlagsDraft.spade,
+        };
+        const newPosts = [...posts];
+        newPosts.splice(index, 0, insPost);
+        setPosts(newPosts);
+        setFilteredIndexes((prev) => {
+            const result: number[] = [];
+
+            for (const i of prev) {
+                if (i === index) {
+                    result.push(i, i + 1); // indexとindex+1の両方を追加
+                } else if (i > index) {
+                    result.push(i + 1); // indexより大きいものは+1
+                } else {
+                    result.push(i); // それ以外はそのまま
+                }
+            }
+
+            return result;
+        });
+};
 
     //削除ボタン
     const handleDeletePost = (index: number) => {
         const newPosts = [...posts];
         newPosts.splice(index, 1);
         setPosts(newPosts);
-        resetTimer();
-        setMessage('');
+        //resetTimer();
+        //setMessage('');
+        //hasFilteredOnce.current = false;
+        setFilteredIndexes((prev) =>
+            prev
+                .filter((i) => i !== index)
+                .map((i) => (i > index ? i - 1 : i))
+        );
     };
 
     //保存ボタン
@@ -167,18 +230,22 @@ export function SortableList({ user }: TodolistProps) {
         const newPostsT = posts.filter((post) => post.published);
         setPosts([...newPostsF, ...newPostsT]);
         resetTimer();
+        hasFilteredOnce.current = false;
         setMessage('チェックが入った行を下へ移しました');
     };
 
     //全削除ボタン
     const handleAllDel = () => {
         const newPostsF = posts.filter((post) => !post.published);
-        setPosts(newPostsF);
+        setPosts([...newPostsF]);
         resetTimer();
+        setFilteredIndexes(newPostsF.map((_, index) => index));
+        hasFilteredOnce.current = false;
         setMessage('チェックが入った行を全て削除しました');
     };
 
     //逆順ボタン
+    //const [message1, setMessage1] = useState('メッセージ1')
     const handleReverse = () => {
         resetTimer();
         const newPosts = posts.slice().reverse();
@@ -187,8 +254,28 @@ export function SortableList({ user }: TodolistProps) {
         //    oldpost[oldpost.length - 1 - index])
         //);
         setPosts(newPosts);
+        resetTimer();
         setMessage('リストを逆順にしました');
         //setAnimationTrigger(prev => prev + 1);
+
+        if (!allShow) {
+            setFilteredIndexes((prev) => {
+                const result: number[] = [];
+                let debugMessage = `リスト逆順/// length=${posts.length}, i=`;
+
+                for (const i of prev) {
+                    result.push(posts.length - i - 1);
+                    debugMessage += `${i},`;
+                }
+
+                //setMessage1(debugMessage);
+                console.log('Reversed indexes:', result);
+                console.log('Original indexes:', prev);
+                return result;
+            });
+            //const newIndexes = filteredIndexes.slice().reverse();
+            //setFilteredIndexes(newIndexes);
+        }
     }
 
     //チェック反転ボタン
@@ -239,6 +326,46 @@ export function SortableList({ user }: TodolistProps) {
             };
             return newPosts;
         });
+    };
+
+    //汎用チェックボタン
+    const updateSwitch = (index: number, key: PostKey) => {
+        setPosts((oldPosts) => {
+            const newPosts = [...oldPosts];
+            newPosts[index] = {
+                ...newPosts[index],
+                [key]: !newPosts[index][key],
+            };
+            return newPosts;
+        });
+    };
+
+    const allShow = useRef(false);
+    //「絞込」ボタンで filteredPosts を更新
+    const applyFilter = () => {
+        const { club, diamond, heart, spade } = filterFlagsDraft;
+        const isFiltering = club || diamond || heart || spade;
+
+        const indexes = posts
+            .map((post, index) => ({ post, index }))
+            .filter(({ post }) => {
+                if (true) {
+                    if (!isFiltering) {// 全部falseなら全件表示  
+                        allShow.current = true;// 全件表示ならallShowをtrue
+                        return true;
+                    }
+                    allShow.current = false; // 絞り込みありならallShowをfalse
+                    return (
+                        (club && post.club) ||
+                        (diamond && post.diamond) ||
+                        (heart && post.heart) ||
+                        (spade && post.spade)
+                    );
+                }
+            })
+            .map(({ index }) => index); // ✅ indexだけ抽出
+
+        setFilteredIndexes(indexes); // ✅ number[] を渡す
     };
 
     //メッセージの自動ループ
@@ -355,6 +482,28 @@ export function SortableList({ user }: TodolistProps) {
         setMessage('');
     };
 
+    const [filterFlagsDraft, setFilterFlagsDraft] = useState({
+        club: false,
+        diamond: false,
+        heart: false,
+        spade: false,
+    });
+    /*const [ filterFlags, setFilterFlags] = useState({
+        club: false,
+        diamond: false,
+        heart: false,
+        spade: false,
+    });*/
+    //const [filterAndOr, setFilterAndOr] = useState(false);//trueならAND検索
+    const hasFilteredOnce = useRef(false);
+    useEffect(() => {
+        if (!hasFilteredOnce.current && posts.length > 0) {
+            applyFilter(); // ページ表示直後に1回だけ絞り込み実行
+            hasFilteredOnce.current = true;
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [posts]);
+
     return (
         // dnd-kitのコンテキストプロバイダー
         // sensors: どの入力方法でドラッグ操作を認識するかを設定
@@ -374,7 +523,7 @@ export function SortableList({ user }: TodolistProps) {
                 <div
                     className="flex justify-between"
                 >
-                    <div className="flex justify-between items-center gap-2 py-1 justify-start flex-col">
+                    <div className="flex justify-between items-center gap-2 py-1 justify-start flex-col center space-evenly">
                         <button
                             //className={`bg-blue-500 text-white px-3 py-1 rounded w-[100px]`}
                             className={`bg-blue-500 text-white ${isSorting ? "font-bold" : ""} px-3 py-1 rounded w-[100px]`}
@@ -458,30 +607,30 @@ export function SortableList({ user }: TodolistProps) {
                             aria-disabled={saving || isSorting}
                         >戻す</button>
                         <button
-                            className={`${isSorting ? "bg-gray-300 cursor-not-allowed" : "bg-gray-500"} text-white px-3 py-1 rounded w-[100px]`}
+                            className={`${isSorting || !allShow.current ? "bg-gray-300 cursor-not-allowed" : "bg-gray-500"} text-white px-3 py-1 rounded w-[100px]`}
                             onClick={(e) => {
-                                if (isSorting) {
+                                if (isSorting || !allShow.current) {
                                     e.preventDefault();
                                     return;
                                 }
                                 handleAllDown();
                             }}
-                            aria-disabled={isSorting}
+                            aria-disabled={isSorting || !allShow.current}
                         ><div className="flex items-center justify-center">
                                 <div><CgCheckR /></div>
                                 <div>下段</div>
                             </div>
                         </button>
                         <button
-                            className={`${isSorting ? "bg-gray-300 cursor-not-allowed" : "bg-gray-500"} text-white px-3 py-1 rounded w-[100px]`}
+                            className={`${isSorting || !allShow.current ? "bg-gray-300 cursor-not-allowed" : "bg-gray-500"} text-white px-3 py-1 rounded w-[100px]`}
                             onClick={(e) => {
-                                if (isSorting) {
+                                if (isSorting || !allShow.current) {
                                     e.preventDefault();
                                     return;
                                 }
                                 handleAllDel();
                             }}
-                            aria-disabled={isSorting}
+                            aria-disabled={isSorting || !allShow.current}
                         >
                             <div className="flex items-center justify-center">
                                 <div><CgCheckR /></div>
@@ -497,12 +646,70 @@ export function SortableList({ user }: TodolistProps) {
                     {isSorting ? 'ドラッグでリストを並び替えできます' : message || '\u00A0'}
                 </p>
                 <div className="flex flex-col w-full p-2 bg-gray-100 rounded h-[500px] overflow-y-scroll overflow-x-hidden">
-                    {posts.map((post, index) => (
-                        // 並び替え可能な各アイテムをレンダリング
+                    {/*posts.map((post, index) => ({ post, index })).filter(({ post }) => {
+                        // 並び替え可能な各アイテムをレンダリング(OR検索)
                         //className="gap-2 border p-2 rounded bg-white shadow "
+                        const { club, diamond, heart, spade } = filterFlags;
+                        if (!filterAndOr)
+                        {
+                            // 絞り込みが1つでも有効ならOR条件で判定
+                            const isFiltering = club || diamond || heart || spade;
 
-                        <SortableItem key={post.id} post={post} index={index} isSorting={isSorting} onDeleteAction={handleDeletePost} onToggleAction={updateToggle} onTitleAction={updateText} />
-                    ))}
+                            if (!isFiltering) return true; // 全部falseなら全件表示
+
+                            return (
+                                (club && post.club) ||
+                                (diamond && post.diamond) ||
+                                (heart && post.heart) ||
+                                (spade && post.spade)
+                            );
+                        }
+                        else
+                        {
+                            const activeKeys = Object.entries(filterFlags)
+                                .filter(([, isSelected]) => isSelected)
+                                .map(([key]) => key as keyof typeof post);
+
+                            // 絞り込みがない場合は全件表示
+                            if (activeKeys.length === 0) return true;
+
+                            // AND条件：すべての選択項目が true である投稿のみ表示
+                            return activeKeys.every((key) => post[key]);
+                        }
+                    }).map(({post, index}) => (
+                        <SortableItem key={post.id} post={post} index={index} isSorting={isSorting} onDeleteAction={handleDeletePost} onInsertAction={handleInsertPost} onToggleAction={updateToggle} onTitleAction={updateText} onSwitchAction={updateSwitch} />
+                    ))*/}
+                    {/*filteredIndexes.map((index) => (*/
+                        filteredIndexes.map((index) => {
+                            const post = posts[index];
+                            if (!post) return null; // ✅ 安全ガード
+                            return (
+                                /*filteredItems.map(({ index }) => (*/
+
+                                <SortableItem
+                                    key={posts[index].id}
+                                    post={posts[index]}
+                                    index={index}
+                                    isSorting={isSorting}
+                                    onDeleteAction={handleDeletePost}
+                                    onInsertAction={handleInsertPost}
+                                    onToggleAction={updateToggle}
+                                    onTitleAction={updateText}
+                                    onSwitchAction={updateSwitch}
+                                />
+                            )
+                        })}
+                    <div className="flex items-center gap-2 text-center">
+                        <button
+                            className={`bg-blue-500 disabled:opacity-0 text-white px-3 rounded w-[100%] flex justify-center text-center`} // disabled中は透明にする
+                            //className={`${isSorting ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500"} text-white px-3 py-1 rounded w-[100px]`}
+                            onClick={() => {
+                                handleAddPost();
+                            }}
+                            disabled={isSorting}
+                            aria-label="追加"
+                        ><FaPlus className="size-3" /></button>
+                    </div>
                 </div>
             </SortableContext>
         </DndContext>

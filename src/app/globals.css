@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 @import "tw-animate-css";
 
 html,
@@ -119,10 +119,47 @@ body,
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+    html {
+        @apply text-[100%];
+        text-size-adjust: 100%;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    * {
+        @apply border-border outline-ring/50;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+
+    [data-nextjs-dialog-backdrop] {
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+    }
+
+    [data-nextjs-container-errors-pseudo-html-collapse='true'] .nextjs__container_errors__component-stack code {
+        -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, black 10%);
+        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, black 10%);
+    }
+
+    button {
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    .nextjs-container-build-error-version-status > .turbopack-text {
+        background: linear-gradient(to right, var(--color-turbopack-text-red) 0%, var(--color-turbopack-text-blue) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    [data-nextjs-call-stack-frame] {
+        display: block;
+        box-sizing: border-box;
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
+        padding: 6px 8px;
+        border-radius: var(--rounded-lg);
+    }
 }
