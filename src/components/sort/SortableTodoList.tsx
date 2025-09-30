@@ -383,7 +383,7 @@ export function SortableList({ user }: TodolistProps) {
         const messages = [
             "「戻す」で最後に保存した内容に戻します",
             "「並替」で並び替えモードになります",
-            "「追加」でリストを1行追加します",
+            "「追加」でリスト最下段に1行追加します",
             "「保存」で現在のリストを保存します",
             "「逆順」でリストの順序を逆順にします",
             "「☑反転」でチェックの有無を反転します",
@@ -391,6 +391,7 @@ export function SortableList({ user }: TodolistProps) {
             "「☑下段」でチェックが入った行を全てリスト下段に移動します",
             "「☑削除」でチェックが入った行を全て消します",
             "リスト内の「ゴミ箱ボタン」でその行を消します",
+            "リスト行間の「＋ボタン」で行間に1行挿入します",
         ];
         let disappearTimer: NodeJS.Timeout;
         let appearTimer: NodeJS.Timeout;
